@@ -1,7 +1,13 @@
 "use client";
 import React from "react";
 
-export default function Hero({ title, description, onOpen3D }: any) {
+type HeroProps = {
+  title: string;
+  description: string;
+  onOpen3D?: () => void;
+};
+
+export default function Hero({ title, description, onOpen3D }: HeroProps) {
   return (
     <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#2B2321] to-[#453735] text-[#FDFBF7] p-10 shadow-2xl border border-[#D4AF37]/20">
       <div className="max-w-2xl space-y-4 relative z-10">

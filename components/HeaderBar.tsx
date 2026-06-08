@@ -2,7 +2,15 @@
 import React from "react";
 import { Search, UserPlus } from "lucide-react";
 
-export default function HeaderBar({ searchQuery, setSearchQuery }: any) {
+type HeaderBarProps = {
+  searchQuery: string;
+  setSearchQuery: (value: string) => void;
+};
+
+export default function HeaderBar({
+  searchQuery,
+  setSearchQuery,
+}: HeaderBarProps) {
   return (
     <header className="sticky top-0 z-30 bg-[#FAF6F0]/95 backdrop-blur-md px-10 py-5 flex items-center justify-between border-b border-[#4A3E3D]/10">
       <div className="relative w-80">
