@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
-import { getSupabase } from "@/lib/supabase";
+import { getSupabase, getSupabaseStorageBucket } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
-
-const fallbackBucket = "timeline-media";
 
 function getFileExtension(fileName: string) {
   const extension = fileName.split(".").pop();
@@ -19,10 +17,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "A file is required." }, { status: 400 });
     }
 
-    const bucket =
-      process.env.SUPABASE_STORAGE_BUCKET ??
-      process.env.NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET ??
-      fallbackBucket;
+    const bucket = getSupabaseStorageBucket();
     const supabase = getSupabase();
     const safeName = file.name
       .replace(/\.[^/.]+$/, "")

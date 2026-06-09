@@ -1,34 +1,10 @@
 import { NextResponse } from "next/server";
+import { validateEventPayload, type EventPayload } from "@/features/events/validators";
+import type { MediaRow } from "@/features/media/types";
 import { getSupabase } from "@/lib/supabase";
+import { withDisplayUrl } from "@/lib/supabase/storage";
 
 export const dynamic = "force-dynamic";
-
-type EventPayload = {
-  title?: unknown;
-  description?: unknown;
-  timeline_year?: unknown;
-};
-
-function validateEventPayload(payload: EventPayload) {
-  const title = typeof payload.title === "string" ? payload.title.trim() : "";
-  const description =
-    typeof payload.description === "string" ? payload.description.trim() : "";
-  const timelineYear = Number(payload.timeline_year);
-
-  if (!title || !description || !Number.isInteger(timelineYear)) {
-    return {
-      error: "title, description and timeline_year are required.",
-    };
-  }
-
-  return {
-    data: {
-      title,
-      description,
-      timeline_year: timelineYear,
-    },
-  };
-}
 
 export async function GET() {
   try {
@@ -62,7 +38,10 @@ export async function GET() {
       return NextResponse.json({ error: mediaError.message }, { status: 500 });
     }
 
-    const mediaById = new Map((media ?? []).map((item) => [item.id, item]));
+    const signedMedia = await Promise.all(
+      ((media ?? []) as MediaRow[]).map((item) => withDisplayUrl(supabase, item)),
+    );
+    const mediaById = new Map(signedMedia.map((item) => [item.id, item]));
     const data = (events ?? []).map((event) => ({
       ...event,
       media: (links ?? [])

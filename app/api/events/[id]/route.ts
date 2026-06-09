@@ -1,37 +1,7 @@
 import { NextResponse } from "next/server";
+import { validateEventPayload, type EventPayload } from "@/features/events/validators";
 import { getSupabase } from "@/lib/supabase";
-
-type EventPayload = {
-  title?: unknown;
-  description?: unknown;
-  timeline_year?: unknown;
-};
-
-function validateId(rawId: string) {
-  const id = Number(rawId);
-  return Number.isInteger(id) && id > 0 ? id : null;
-}
-
-function validateEventPayload(payload: EventPayload) {
-  const title = typeof payload.title === "string" ? payload.title.trim() : "";
-  const description =
-    typeof payload.description === "string" ? payload.description.trim() : "";
-  const timelineYear = Number(payload.timeline_year);
-
-  if (!title || !description || !Number.isInteger(timelineYear)) {
-    return {
-      error: "title, description and timeline_year are required.",
-    };
-  }
-
-  return {
-    data: {
-      title,
-      description,
-      timeline_year: timelineYear,
-    },
-  };
-}
+import { validatePositiveInteger } from "@/lib/validation";
 
 export async function PATCH(
   request: Request,
@@ -39,7 +9,7 @@ export async function PATCH(
 ) {
   const supabase = getSupabase();
   const { id: rawId } = await context.params;
-  const id = validateId(rawId);
+  const id = validatePositiveInteger(rawId);
 
   if (!id) {
     return NextResponse.json({ error: "Invalid event id." }, { status: 400 });
@@ -72,7 +42,7 @@ export async function DELETE(
 ) {
   const supabase = getSupabase();
   const { id: rawId } = await context.params;
-  const id = validateId(rawId);
+  const id = validatePositiveInteger(rawId);
 
   if (!id) {
     return NextResponse.json({ error: "Invalid event id." }, { status: 400 });

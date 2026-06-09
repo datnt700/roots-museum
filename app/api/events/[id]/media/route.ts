@@ -1,41 +1,8 @@
 import { NextResponse } from "next/server";
+import { validateMediaPayload, type MediaPayload } from "@/features/media/validators";
 import { getSupabase } from "@/lib/supabase";
-
-type MediaPayload = {
-  file_name?: unknown;
-  file_url?: unknown;
-  file_type?: unknown;
-};
-
-function validateId(rawId: string) {
-  const id = Number(rawId);
-  return Number.isInteger(id) && id > 0 ? id : null;
-}
-
-function validateMediaPayload(payload: MediaPayload) {
-  const fileName =
-    typeof payload.file_name === "string" ? payload.file_name.trim() : "";
-  const fileUrl =
-    typeof payload.file_url === "string" ? payload.file_url.trim() : "";
-  const fileType =
-    typeof payload.file_type === "string" ? payload.file_type.trim() : "";
-
-  if (!fileName || !fileUrl || !fileType) {
-    return { error: "file_name, file_url and file_type are required." };
-  }
-
-  if (!["image", "video"].includes(fileType)) {
-    return { error: "file_type must be image or video." };
-  }
-
-  return {
-    data: {
-      file_name: fileName,
-      file_url: fileUrl,
-      file_type: fileType,
-    },
-  };
-}
+import { withDisplayUrl } from "@/lib/supabase/storage";
+import { validatePositiveInteger } from "@/lib/validation";
 
 export async function POST(
   request: Request,
@@ -43,7 +10,7 @@ export async function POST(
 ) {
   const supabase = getSupabase();
   const { id: rawId } = await context.params;
-  const eventId = validateId(rawId);
+  const eventId = validatePositiveInteger(rawId);
 
   if (!eventId) {
     return NextResponse.json({ error: "Invalid event id." }, { status: 400 });
@@ -76,5 +43,8 @@ export async function POST(
     return NextResponse.json({ error: linkError.message }, { status: 500 });
   }
 
-  return NextResponse.json({ data: media }, { status: 201 });
+  return NextResponse.json(
+    { data: await withDisplayUrl(supabase, media) },
+    { status: 201 },
+  );
 }

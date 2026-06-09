@@ -8,23 +8,43 @@ function normalizeSupabaseUrl(rawUrl: string) {
     .replace(/\/storage\/v1$/i, "");
 }
 
-export function getSupabase() {
-  const rawSupabaseUrl =
-    process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY ??
-    process.env.SUPABASE_PUBLISHABLE_KEY ??
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+export function getSupabaseStorageBucket() {
+  return (
+    process.env.SUPABASE_STORAGE_BUCKET ??
+    process.env.NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET ??
+    "timeline-media"
+  );
+}
 
-  if (!rawSupabaseUrl || !supabaseKey) {
-    throw new Error("Missing Supabase environment variables.");
+export function getSupabaseProjectUrl() {
+  const rawSupabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+  if (!rawSupabaseUrl) {
+    throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL.");
   }
 
-  const supabaseUrl = normalizeSupabaseUrl(rawSupabaseUrl);
+  return normalizeSupabaseUrl(rawSupabaseUrl);
+}
+
+export function getSupabase() {
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseKey) {
+    throw new Error(
+      "Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY.",
+    );
+  }
+
+  const supabaseUrl = getSupabaseProjectUrl();
 
   if (!supabaseUrl.startsWith("http://") && !supabaseUrl.startsWith("https://")) {
     throw new Error("SUPABASE_URL must be a valid HTTP or HTTPS URL.");
   }
 
-  return createClient(supabaseUrl, supabaseKey);
+  return createClient(supabaseUrl, supabaseKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+  });
 }
